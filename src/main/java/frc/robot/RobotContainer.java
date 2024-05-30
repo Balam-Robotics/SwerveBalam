@@ -73,11 +73,6 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
 
-    System.out.println(autoChooser.getSelected().getName());
-    System.out.println("--------------");
-    //PathPlannerPath path = PathPlannerPath.fromPathFile("Forward"); // For manual path chooser
-
-    //List<PathPlannerPath> auto = PathPlannerAuto.getPathGroupFromAutoFile(pathfinderChooser.getSelected().toString());
     List<PathPlannerPath> auto = PathPlannerAuto.getPathGroupFromAutoFile(autoChooser.getSelected().getName());
     PathPlannerPath[] path = auto.toArray(new PathPlannerPath[0]);
     
@@ -93,5 +88,6 @@ public class RobotContainer {
     );
  
     return pathfindingCommand.andThen(autoChooser.getSelected()).withTimeout(15);
+    
   }
 }
