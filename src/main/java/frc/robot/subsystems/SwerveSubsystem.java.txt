@@ -1,0 +1,450 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
+package frc.robot.subsystems;
+
+import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.SparkAbsoluteEncoder.Type;
+
+import java.util.Arrays;
+import java.util.List;
+
+import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerTrajectory;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.PathPlannerLogging;
+import com.pathplanner.lib.util.ReplanningConfig;
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkPIDController;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.ModuleConstants;
+import frc.robot.Constants.ShuffleboardConstants;
+
+class SwerveModule {
+
+  private CANSparkMax sm_drivingMotor;
+  private CANSparkMax sm_turningMotor;
+
+  private RelativeEncoder sm_drivingEncoder;
+  private AbsoluteEncoder sm_turningEncoder;
+
+  private SwerveModuleState sm_desiredState = new SwerveModuleState(0.0, new Rotation2d());
+  private SwerveModuleState sm_setpoints = new SwerveModuleState(0.0, new Rotation2d());
+
+  private SparkPIDController sm_drivePIDController;
+  private SparkPIDController sm_turningPIDController;
+
+  private double m_chassisAngularOffset = 0;
+
+  public SwerveModule(int drivingId, int turningId, double chassisAngularOffset) {
+    
+    sm_drivingMotor = new CANSparkMax(drivingId, MotorType.kBrushless);
+    sm_turningMotor = new CANSparkMax(turningId, MotorType.kBrushless);
+
+    sm_drivingMotor.restoreFactoryDefaults();
+    sm_turningMotor.restoreFactoryDefaults();
+
+    sm_drivingEncoder = sm_drivingMotor.getEncoder();
+    sm_turningEncoder = sm_turningMotor.getAbsoluteEncoder(Type.kDutyCycle);
+
+    // Pid
+
+    sm_drivePIDController = sm_drivingMotor.getPIDController();
+    sm_turningPIDController = sm_turningMotor.getPIDController();
+
+    sm_drivePIDController.setFeedbackDevice(sm_drivingEncoder);
+    sm_turningPIDController.setFeedbackDevice(sm_turningEncoder);
+
+    sm_turningPIDController.setPositionPIDWrappingEnabled(true);
+    sm_turningPIDController.setPositionPIDWrappingMinInput(0);
+    sm_turningPIDController.setPositionPIDWrappingMaxInput(2 * Math.PI);
+
+    // Set the PID gains for the driving motor. Note these are example gains, and you
+    // may need to tune them for your own robot!
+    sm_drivePIDController.setP(0.04);
+    sm_drivePIDController.setI(0);
+    sm_drivePIDController.setD(0);
+    sm_drivePIDController.setOutputRange(-1,1);
+    sm_drivePIDController.setFF(ModuleConstants.kDrivingFF);
+    sm_drivePIDController.setOutputRange(ModuleConstants.kDrivingMinOutput,
+        ModuleConstants.kDrivingMaxOutput);
+
+    // Set the PID gains for the turning motor. Note these are example gains, and you
+    // may need to tune them for your own robot!
+    sm_turningPIDController.setP(1);
+    sm_turningPIDController.setI(0);
+    sm_turningPIDController.setD(1);
+    sm_turningPIDController.setOutputRange(-1,1);
+    sm_turningPIDController.setFF(ModuleConstants.kTurningFF);
+    sm_turningPIDController.setOutputRange(ModuleConstants.kTurningMinOutput,
+        ModuleConstants.kTurningMaxOutput);
+
+    // Misc
+
+    sm_drivingEncoder.setPositionConversionFactor(ModuleConstants.kDrivingEncoderPositionFactor);
+    sm_drivingEncoder.setVelocityConversionFactor(ModuleConstants.kDrivingEncoderVelocityFactor);
+    
+    sm_turningEncoder.setPositionConversionFactor(ModuleConstants.kTurningEncoderPositionFactor);
+    sm_turningEncoder.setVelocityConversionFactor(ModuleConstants.kTurningEncoderVelocityFactor);
+
+    sm_turningEncoder.setInverted(true);
+
+    // Other
+
+    sm_drivingMotor.setIdleMode(ModuleConstants.kDrivingMotorIdleMode);
+    sm_turningMotor.setIdleMode(ModuleConstants.kTurningMotorIdleMode);
+    sm_drivingMotor.setSmartCurrentLimit(ModuleConstants.kDrivingMotorCurrentLimit);
+    sm_turningMotor.setSmartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit);
+
+    sm_drivingMotor.burnFlash();
+    sm_turningMotor.burnFlash();
+
+    // Final
+
+    sm_desiredState.angle = new Rotation2d(sm_turningEncoder.getPosition());
+    sm_drivingEncoder.setPosition(0);
+    m_chassisAngularOffset = chassisAngularOffset;
+
+  }
+
+  public SwerveModuleState getState() {
+    return sm_desiredState;
+  }
+
+  public SwerveModuleState getSetpoints() {
+    return sm_setpoints;
+  }
+
+  public SwerveModuleState getPhysicState() {
+    return new SwerveModuleState(sm_drivingEncoder.getVelocity(), new Rotation2d(sm_turningEncoder.getPosition()- m_chassisAngularOffset));
+  }
+
+  public SwerveModulePosition getPosition() {
+    return new SwerveModulePosition(sm_drivingEncoder.getPosition(), new Rotation2d(sm_turningEncoder.getPosition() - m_chassisAngularOffset ));
+  }
+
+  public void setdesiredStateTest(SwerveModuleState newState) {
+    sm_desiredState = newState;
+  }
+
+
+  public void setdesiredState(SwerveModuleState desiredState) {
+    
+    SwerveModuleState correctedDesiredState = new SwerveModuleState();
+    correctedDesiredState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
+    correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(m_chassisAngularOffset));
+
+    SwerveModuleState optimizedDesiredState = SwerveModuleState.optimize(correctedDesiredState, new Rotation2d(sm_turningEncoder.getPosition()));
+    
+    // Set points
+    sm_drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
+    sm_turningPIDController.setReference(optimizedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
+
+    sm_desiredState = desiredState;
+    sm_setpoints = optimizedDesiredState;
+
+  }
+
+}
+
+public class SwerveSubsystem extends SubsystemBase {
+  
+  // Create each 4 module of the SwerveDrive
+
+  private final SwerveModule m_frontLeft = new SwerveModule(22, 21, DriveConstants.kFrontLeftChassisAngularOffset);
+  private final SwerveModule m_frontRight = new SwerveModule(12, 11, DriveConstants.kFrontRightChassisAngularOffset);
+  private final SwerveModule m_backLeft = new SwerveModule(32, 31, DriveConstants.kBackLeftChassisAngularOffset);
+  private final SwerveModule m_backRight = new SwerveModule(2, 1, DriveConstants.kBackRightChassisAngularOffset);
+
+  // Create Swerve Kinematics
+
+  double chassisWidth = Units.inchesToMeters(25);
+  double chassisLength = Units.inchesToMeters(25);
+
+  Translation2d frontLeftLocation = new Translation2d(chassisWidth / 2, chassisLength / 2);
+  Translation2d frontRightLocation = new Translation2d(chassisWidth / 2, -chassisLength / 2);
+  Translation2d backLeftLocation = new Translation2d(-chassisWidth / 2, chassisLength / 2);
+  Translation2d backRightLocation = new Translation2d(-chassisWidth / 2, -chassisLength / 2);
+
+  SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
+    frontLeftLocation,
+    frontRightLocation,
+    backLeftLocation,
+    backRightLocation
+  );
+  
+
+  // Limelight
+
+  NetworkTable m_limelight = NetworkTableInstance.getDefault().getTable("limelight-balam");
+  NetworkTableEntry l_tx = m_limelight.getEntry("tx");
+  NetworkTableEntry l_ty = m_limelight.getEntry("ty");
+  NetworkTableEntry l_ta = m_limelight.getEntry("ta");
+  NetworkTableEntry l_tv = m_limelight.getEntry("tv");
+
+
+  // Gyro
+
+  AHRS m_gyro = new AHRS(SPI.Port.kMXP);
+
+  // Odometry
+
+  SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
+  kinematics, new Rotation2d(0),
+  new SwerveModulePosition[] {
+    m_frontLeft.getPosition(),
+    m_frontRight.getPosition(),
+    m_backLeft.getPosition(),
+    m_backRight.getPosition()
+  }, new Pose2d(5.0, 13.5, m_gyro.getRotation2d()));
+  
+  private Field2d field;
+
+  public SwerveSubsystem() {
+
+    //initPose(new Pose2d(5, 5, new Rotation2d(0)));
+
+    // Setting up Auto
+  
+  AutoBuilder.configureHolonomic(
+            this::getPose, // Robot pose supplier
+            this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+            this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            this::setChassisSpeed, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+            new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
+                    new PIDConstants(2.6, 0.0, 0.0), // Translation PID constants
+                    new PIDConstants(2.0, 0.0, 0.0), // Rotation PID constants
+                    4.5, // Max module speed, in m/s
+                    0.4, // Drive base radius in meters. Distance from robot center to furthest module.
+                    new ReplanningConfig() // Default path replanning config. See the API for the options here
+            ),
+            () -> {
+              // Boolean supplier that controls when the path will be mirrored for the red alliance
+              // This will flip the path being followed to the red side of the field.
+              // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+              var alliance = DriverStation.getAlliance();
+              if (alliance.isPresent()) {
+                return alliance.get() == DriverStation.Alliance.Red;
+              }
+              return false;
+            },
+            this // Reference to this subsystem to set requirements
+    );
+
+    field = new Field2d();
+    ShuffleboardConstants.SwerveTab.add("Field", field);
+
+  } 
+
+  public void setChassisSpeed(ChassisSpeeds desired) {
+    //desired = new ChassisSpeeds(1,1,1);
+    SwerveModuleState[] newStates = kinematics.toSwerveModuleStates(desired);
+    SwerveDriveKinematics.desaturateWheelSpeeds(newStates, 4.8);
+    m_frontLeft.setdesiredState(newStates[0]);
+    m_frontRight.setdesiredState(newStates[1]);
+    m_backLeft.setdesiredState(newStates[2]);
+    m_backRight.setdesiredState(newStates[3]);
+    System.out.println(desired);
+    System.out.println(newStates);
+
+  }
+
+  // Important Functions
+
+  public Pose2d getPose() {
+    return m_odometry.getPoseMeters();
+  }
+
+  public Rotation2d getRotation2d() {
+    return getPose().getRotation();
+  }
+  
+  public void resetPose(Pose2d reseted) {
+    m_odometry.resetPosition(
+      getRotation2d(), 
+      new SwerveModulePosition[] {
+        m_frontLeft.getPosition(), 
+        m_frontRight.getPosition(),
+        m_backLeft.getPosition(),
+        m_backRight.getPosition()
+      }, reseted );
+  }
+
+  
+
+  public void initPose(Pose2d point) {
+    m_odometry.resetPosition(
+      Rotation2d.fromDegrees(m_gyro.getAngle()), 
+      new SwerveModulePosition[] {
+        m_frontLeft.getPosition(), 
+        m_frontRight.getPosition(),
+        m_backLeft.getPosition(),
+        m_backRight.getPosition()
+      }, point);
+  }
+
+  public void resetGyro() {
+    m_gyro.reset();
+  }
+
+  public ChassisSpeeds getRobotRelativeSpeeds() {
+    return kinematics.toChassisSpeeds(m_frontLeft.getPhysicState(), m_frontRight.getPhysicState(), m_backLeft.getPhysicState(), m_backRight.getPhysicState());
+  } 
+
+  // Drive
+
+  public void driveTest(double xSpeed, double ySpeed, double rot, boolean fieldOriented) {
+
+    ChassisSpeeds newDesiredSpeed = new ChassisSpeeds(xSpeed, ySpeed, rot);
+    setChassisSpeed(newDesiredSpeed);
+
+  }
+
+  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldOriented) {
+
+    double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond;
+    double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond;
+    double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
+
+    ChassisSpeeds finalChassisSpeeds;
+
+    var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
+        fieldOriented
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(-m_gyro.getAngle()))
+            : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    m_frontLeft.setdesiredState(swerveModuleStates[0]);
+    m_frontRight.setdesiredState(swerveModuleStates[1]);
+    m_backLeft.setdesiredState(swerveModuleStates[2]);
+    m_backRight.setdesiredState(swerveModuleStates[3]);
+
+  }
+
+  // Limelight handlers
+
+  public void getApriltagPosition() {
+    double limelightInfo[] = m_limelight.getEntry("botpose").getDoubleArray(new double[6]);
+  }
+  
+  // Advantage Scope
+  
+  StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault().getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
+  StructArrayPublisher<SwerveModuleState> publisher_setpoints = NetworkTableInstance.getDefault().getStructArrayTopic("MySetpoints", SwerveModuleState.struct).publish();
+  StructArrayPublisher<SwerveModuleState> publisher_realState = NetworkTableInstance.getDefault().getStructArrayTopic("PhysicalState", SwerveModuleState.struct).publish();
+  StructPublisher<Rotation2d> publisher_rotation2d = NetworkTableInstance.getDefault().getStructTopic("Rotation2d", Rotation2d.struct).publish();
+
+  StructPublisher<Pose2d> publisher_pose = NetworkTableInstance.getDefault().getStructTopic("MyPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> publisher_robotPose = NetworkTableInstance.getDefault().getStructTopic("RobotPose", Pose2d.struct).publish();
+
+  StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault().getStructArrayTopic("MyPoseArray", Pose2d.struct).publish();
+
+  Pose2d poseA = new Pose2d(2, 7, new Rotation2d(0));
+  Pose2d poseB = new Pose2d(8, 1, new Rotation2d(0));
+
+  @Override
+  public void periodic() {
+
+    // Log controller data
+
+    //ChassisSpeeds newDesiredSpeed = new ChassisSpeeds(controller.getLeftY(), controller.getLeftX(), controller.getRightX());
+    //setChassisSpeed(newDesiredSpeed);
+
+    // Odometry
+    //Rotation2d.fromDegrees(m_gyro.getAngle())
+    m_odometry.update(m_gyro.getRotation2d(),
+    new SwerveModulePosition[] {
+      m_frontLeft.getPosition(),
+      m_frontRight.getPosition(),
+      m_backLeft.getPosition(),
+      m_backRight.getPosition()
+    });
+
+
+    // Log Module states
+
+    double loggindgStates[] = {
+      m_frontLeft.getState().angle.getDegrees(),
+      m_frontLeft.getState().speedMetersPerSecond,
+      m_frontRight.getState().angle.getDegrees(),
+      m_frontRight.getState().speedMetersPerSecond,
+      m_backLeft.getState().angle.getDegrees(),
+      m_backLeft.getState().speedMetersPerSecond,
+      m_backRight.getState().angle.getDegrees(),
+      m_backRight.getState().speedMetersPerSecond,
+    };
+
+    SwerveModuleState[] loggingStates = new SwerveModuleState[] {
+      m_frontLeft.getState(),
+      m_frontRight.getState(),
+      m_backLeft.getState(),
+      m_backRight.getState()
+    };
+
+    SwerveModuleState[] setPoints = new SwerveModuleState[] {
+      m_frontLeft.getSetpoints(),
+      m_frontRight.getSetpoints(),
+      m_backLeft.getSetpoints(),
+      m_backRight.getSetpoints()
+    };
+
+    SwerveModuleState[] physicPoints = new SwerveModuleState[] {
+      m_frontLeft.getPhysicState(),
+      m_frontRight.getPhysicState(),
+      m_backLeft.getPhysicState(),
+      m_backRight.getPhysicState(),
+    };
+
+    //SmartDashboard.putNumberArray("SwerveModuleStates", loggingStates);
+    publisher.set(loggingStates);
+    publisher_setpoints.set(setPoints);
+    publisher_realState.set(physicPoints);
+    publisher_rotation2d.set(getRotation2d());
+
+    publisher_pose.set(poseA);
+    publisher_robotPose.set(getPose()); 
+    arrayPublisher.set(new Pose2d[] {poseA, poseB});
+
+    // Limelight values
+
+
+    SmartDashboard.putNumber("LimelightX", l_tx.getDouble(0.0));
+    SmartDashboard.putNumber("LimelightY", l_ty.getDouble(0.0));
+    SmartDashboard.putNumber("LimelightArea", l_ta.getDouble(0.0));
+    SmartDashboard.putNumber("LimelightHasTarget", l_tv.getDouble(0.0));
+
+    field.setRobotPose(m_odometry.getPoseMeters());
+
+  }
+
+}
