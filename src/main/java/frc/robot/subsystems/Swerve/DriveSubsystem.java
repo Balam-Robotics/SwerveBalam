@@ -18,6 +18,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.ModuleConstants;
@@ -74,21 +75,22 @@ public class DriveSubsystem extends SubsystemBase {
   AHRS m_gyro = new AHRS(SPI.Port.kMXP);
   public boolean isFieldOriented = true;
 
-  public boolean changeDriveMod() {
-    
-    return !isFieldOriented;
+  public void changeDriveMod() {
+    isFieldOriented = !isFieldOriented;
+    SmartDashboard.putBoolean("Field Oriented", isFieldOriented);
+    return;
   }
 
   // Odometry
 
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
-      DriveConstants.kDriveKinematics, m_gyro.getRotation2d(),
+      DriveConstants.kDriveKinematics, new Rotation2d(0),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
           m_backLeft.getPosition(),
           m_backRight.getPosition()
-      }, new Pose2d(5.0, 5.0, m_gyro.getRotation2d()));
+      }, new Pose2d(3.0, 7.0, m_gyro.getRotation2d()));
 
   SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(DriveConstants.kDriveKinematics, 
   getRotation2d(),

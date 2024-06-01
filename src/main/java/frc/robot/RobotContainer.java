@@ -7,6 +7,7 @@ package frc.robot;
 import java.util.List;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.CommandUtil;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
@@ -20,6 +21,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.NavX;
@@ -65,9 +68,10 @@ public class RobotContainer {
             () -> m_robotDrive.zeroHeading(), 
             m_robotDrive));
 
-    if(m_controller.getBButtonPressed()) {
-      m_robotDrive.changeDriveMod();
-    }
+    new JoystickButton(m_controller, XboxController.Button.kB.value)
+      .toggleOnFalse(new RunCommand(
+        () -> m_robotDrive.changeDriveMod(), 
+        m_robotDrive));
 
   }
 
@@ -77,17 +81,21 @@ public class RobotContainer {
     PathPlannerPath[] path = auto.toArray(new PathPlannerPath[0]);
     
     PathConstraints constraints = new PathConstraints(
-        3.0, 4.0, 
+        0.5, 1.0, 
         Units.degreesToRadians(540), Units.degreesToRadians(720)
     );
 
-    Command pathfindingCommand = AutoBuilder.pathfindThenFollowPath(
-        path[0],  
+    Command pathfindingCommand = AutoBuilder.pathfindToPose(
+        path[0].getPreviewStartingHolonomicPose(),  
         constraints,
         3.0
     );
  
-    return pathfindingCommand.andThen(autoChooser.getSelected()).withTimeout(15);
+    SequentialCommandGroup finalCommand = new SequentialCommandGroup(pathfindingCommand.andThen(autoChooser.getSelected()).withTimeout(15));
+
+    
+
+    return finalCommand;
     
   }
 }
