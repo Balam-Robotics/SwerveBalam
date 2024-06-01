@@ -7,7 +7,6 @@ package frc.robot;
 import java.util.List;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.CommandUtil;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
@@ -22,7 +21,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.NavX;
@@ -54,7 +52,6 @@ public class RobotContainer {
     pathfinderChooser = new SendableChooser<>();
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
-    
     SmartDashboard.putData("Pathfinder Chooser", pathfinderChooser);
     pathfinderChooser.addOption("Testing Auto", "Testing Auto");
     pathfinderChooser.addOption("WIP", "Wip");
@@ -69,7 +66,7 @@ public class RobotContainer {
             m_robotDrive));
 
     new JoystickButton(m_controller, XboxController.Button.kB.value)
-      .toggleOnFalse(new RunCommand(
+      .whileTrue(new RunCommand(
         () -> m_robotDrive.changeDriveMod(), 
         m_robotDrive));
 
@@ -92,8 +89,6 @@ public class RobotContainer {
     );
  
     SequentialCommandGroup finalCommand = new SequentialCommandGroup(pathfindingCommand.andThen(autoChooser.getSelected()).withTimeout(15));
-
-    
 
     return finalCommand;
     

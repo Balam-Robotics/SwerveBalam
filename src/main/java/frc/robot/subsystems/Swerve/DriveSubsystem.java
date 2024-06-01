@@ -84,59 +84,58 @@ public class DriveSubsystem extends SubsystemBase {
   // Odometry
 
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
-      DriveConstants.kDriveKinematics, new Rotation2d(0),
-      new SwerveModulePosition[] {
-          m_frontLeft.getPosition(),
-          m_frontRight.getPosition(),
-          m_backLeft.getPosition(),
-          m_backRight.getPosition()
-      }, new Pose2d(3.0, 7.0, m_gyro.getRotation2d()));
+      DriveConstants.kDriveKinematics, 
+      getHeading(),
+      getSwerveModulePositions(), 
+      new Pose2d(3.0, 7.0, new Rotation2d(0)));
 
-  SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(DriveConstants.kDriveKinematics, 
-  getRotation2d(),
-  new SwerveModulePosition[] {m_frontLeft.getPosition(), m_frontRight.getPosition(), m_backLeft.getPosition(), m_backRight.getPosition()},
-  new Pose2d(0, 0, getRotation2d())
+  SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+    DriveConstants.kDriveKinematics, 
+    getRotation2d(),
+    getSwerveModulePositions(),
+    new Pose2d(3.0, 7.0, getRotation2d())
   );
 
   private Field2d field;
+  
+  // ----------------- Drive Subsystem Functions -----------------
+  
+ // Gyro Functions
 
-// Drive Subsystem Functions
+ public Rotation2d getHeading() {
+    return Rotation2d.fromDegrees(-m_gyro.getAngle());
+ }
+
+  public void zeroHeading() {
+    m_gyro.reset();
+  }
+
+  // Odometry Functions
 
   public Pose2d getPose() {
     return m_odometry.getPoseMeters();
   }
 
   public Rotation2d getRotation2d() {
-    return m_odometry.getPoseMeters().getRotation();
+    return getPose().getRotation();
   }
 
-  public void resetPose(Pose2d reseted) {
+public void resetPose(Pose2d reseted) {
     m_odometry.resetPosition(
         getRotation2d(),
-        new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_backLeft.getPosition(),
-            m_backRight.getPosition()
-        }, reseted);
-    poseEstimator.resetPosition(getRotation2d(), 
-    new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_backLeft.getPosition(),
-            m_backRight.getPosition()
-    }, reseted);
-  }
+        getSwerveModulePositions(), 
+        reseted
+        );
 
-  // Reset the robots front
-
-  public void zeroHeading() {
-    m_gyro.reset();
+    poseEstimator.resetPosition(
+        getRotation2d(), 
+        getSwerveModulePositions(), 
+        reseted
+    );
   }
 
   public ChassisSpeeds getRelativeChassisSpeeds() {
-    return DriveConstants.kDriveKinematics.toChassisSpeeds(m_frontLeft.getState(), m_frontRight.getState(),
-        m_backLeft.getState(), m_backRight.getState());
+    return DriveConstants.kDriveKinematics.toChassisSpeeds(getSwerveModuleStates());
   }
 
   // Relative Robot DriveSubsystem for Pathplanner
@@ -144,15 +143,13 @@ public class DriveSubsystem extends SubsystemBase {
   public void setChassisSpeed(ChassisSpeeds desired) {
     SwerveModuleState[] newStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(desired);
     SwerveDriveKinematics.desaturateWheelSpeeds(newStates, 4.8);
-    m_frontLeft.setdesiredState(newStates[0]);
-    m_frontRight.setdesiredState(newStates[1]);
-    m_backLeft.setdesiredState(newStates[2]);
-    m_backRight.setdesiredState(newStates[3]);
+    setDesiredStates(newStates);
   }
 
   // Relative and FieldOriented DriveSubsystem with Controller Inputs
 
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldOriented) {
+
     double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond;
     double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond;
     double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
@@ -165,10 +162,43 @@ public class DriveSubsystem extends SubsystemBase {
                 Rotation2d.fromDegrees(-m_gyro.getAngle()))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    setDesiredStates(swerveModuleStates);
+
+  }
+
+  // Swerve Help Functions
+
+  public void setDesiredStates(SwerveModuleState[] swerveModuleStates) {
     m_frontLeft.setdesiredState(swerveModuleStates[0]);
     m_frontRight.setdesiredState(swerveModuleStates[1]);
     m_backLeft.setdesiredState(swerveModuleStates[2]);
     m_backRight.setdesiredState(swerveModuleStates[3]);
+  }
+
+  public SwerveModulePosition[] getSwerveModulePositions() {
+    return new SwerveModulePosition[] {
+        m_frontLeft.getPosition(),
+        m_frontRight.getPosition(),
+        m_backLeft.getPosition(),
+        m_backRight.getPosition()
+    };
+  }
+
+  public SwerveModuleState[] getSwerveModuleStates() {
+    return new SwerveModuleState[] {
+        m_frontLeft.getState(),
+        m_frontRight.getState(),
+        m_backLeft.getState(),
+        m_backRight.getState()
+    };
+  }
+  public SwerveModuleState[] getSwerveModuleSetpoints() {
+    return new SwerveModuleState[] {
+        m_frontLeft.getSetpoints(),
+        m_frontRight.getSetpoints(),
+        m_backLeft.getSetpoints(),
+        m_backRight.getSetpoints()
+    };
   }
 
   // Drive Subsystem Constructor and Periodic
@@ -209,34 +239,18 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
-    m_odometry.update(m_gyro.getRotation2d(),
-        new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_backLeft.getPosition(),
-            m_backRight.getPosition()
-        });
-    poseEstimator.update(getRotation2d(), new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_backLeft.getPosition(),
-            m_backRight.getPosition()
-        });
-        field.setRobotPose(m_odometry.getPoseMeters());
+    // Odometry Update
 
-    SwerveModuleState[] physicPoints = new SwerveModuleState[] {
-        m_frontLeft.getState(),
-        m_frontRight.getState(),
-        m_backLeft.getState(),
-        m_backRight.getState(),
-    };
+    m_odometry.update(getHeading(), getSwerveModulePositions());
 
-    SwerveModuleState[] setPoints = new SwerveModuleState[] {
-        m_frontLeft.getSetpoints(),
-        m_frontRight.getSetpoints(),
-        m_backLeft.getSetpoints(),
-        m_backRight.getSetpoints()
-    };
+    poseEstimator.update(getRotation2d(), getSwerveModulePositions());
+    field.setRobotPose(m_odometry.getPoseMeters());
+
+    // Publish Advantage Scope Data
+
+    SwerveModuleState[] physicPoints = getSwerveModuleStates();
+
+    SwerveModuleState[] setPoints = getSwerveModuleSetpoints();
 
     publish_SwerveStates.set(physicPoints);
     publish_SwerverSetpoints.set(setPoints);

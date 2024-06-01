@@ -36,6 +36,8 @@ public class BalamSwerveModule {
 
   public BalamSwerveModule(int drivingId, int turningId, double chassisAngularOffset) {
     
+    // Swerve Module Spark Max setup by Rev Robotics
+
     sm_drivingMotor = new CANSparkMax(drivingId, MotorType.kBrushless);
     sm_turningMotor = new CANSparkMax(turningId, MotorType.kBrushless);
 
@@ -44,8 +46,6 @@ public class BalamSwerveModule {
 
     sm_drivingEncoder = sm_drivingMotor.getEncoder();
     sm_turningEncoder = sm_turningMotor.getAbsoluteEncoder(Type.kDutyCycle);
-
-    // Pid
 
     sm_drivePIDController = sm_drivingMotor.getPIDController();
     sm_turningPIDController = sm_turningMotor.getPIDController();
@@ -57,27 +57,19 @@ public class BalamSwerveModule {
     sm_turningPIDController.setPositionPIDWrappingMinInput(0);
     sm_turningPIDController.setPositionPIDWrappingMaxInput(2 * Math.PI);
 
-    // Set the PID gains for the driving motor. Note these are example gains, and you
-    // may need to tune them for your own robot!
     sm_drivePIDController.setP(0.04);
     sm_drivePIDController.setI(0);
     sm_drivePIDController.setD(0);
     sm_drivePIDController.setOutputRange(-1,1);
     sm_drivePIDController.setFF(ModuleConstants.kDrivingFF);
-    sm_drivePIDController.setOutputRange(ModuleConstants.kDrivingMinOutput,
-        ModuleConstants.kDrivingMaxOutput);
+    sm_drivePIDController.setOutputRange(ModuleConstants.kDrivingMinOutput, ModuleConstants.kDrivingMaxOutput);
 
-    // Set the PID gains for the turning motor. Note these are example gains, and you
-    // may need to tune them for your own robot!
     sm_turningPIDController.setP(1);
     sm_turningPIDController.setI(0);
     sm_turningPIDController.setD(1);
     sm_turningPIDController.setOutputRange(-1,1);
     sm_turningPIDController.setFF(ModuleConstants.kTurningFF);
-    sm_turningPIDController.setOutputRange(ModuleConstants.kTurningMinOutput,
-        ModuleConstants.kTurningMaxOutput);
-
-    // Misc
+    sm_turningPIDController.setOutputRange(ModuleConstants.kTurningMinOutput, ModuleConstants.kTurningMaxOutput);
 
     sm_drivingEncoder.setPositionConversionFactor(ModuleConstants.kDrivingEncoderPositionFactor);
     sm_drivingEncoder.setVelocityConversionFactor(ModuleConstants.kDrivingEncoderVelocityFactor);
@@ -87,8 +79,6 @@ public class BalamSwerveModule {
 
     sm_turningEncoder.setInverted(true);
 
-    // Other
-
     sm_drivingMotor.setIdleMode(ModuleConstants.kDrivingMotorIdleMode);
     sm_turningMotor.setIdleMode(ModuleConstants.kTurningMotorIdleMode);
     sm_drivingMotor.setSmartCurrentLimit(ModuleConstants.kDrivingMotorCurrentLimit);
@@ -97,26 +87,31 @@ public class BalamSwerveModule {
     sm_drivingMotor.burnFlash();
     sm_turningMotor.burnFlash();
 
-    // Final
-
     sm_desiredState.angle = new Rotation2d(sm_turningEncoder.getPosition());
     sm_drivingEncoder.setPosition(0);
     m_chassisAngularOffset = chassisAngularOffset;
 
   }
 
+  // Get the current state (Velocity and Position) of the current module
+
   public SwerveModuleState getState() {
-    return new SwerveModuleState(sm_drivingEncoder.getVelocity(), new Rotation2d(sm_turningEncoder.getPosition()- m_chassisAngularOffset));
+    return new SwerveModuleState(sm_drivingEncoder.getVelocity(), new Rotation2d(sm_turningEncoder.getPosition() - m_chassisAngularOffset));
   }
+
+  // Get thec current position (Velocity and Position) of the current module
 
   public SwerveModulePosition getPosition() {
     return new SwerveModulePosition(sm_drivingEncoder.getPosition(), new Rotation2d(sm_turningEncoder.getPosition() - m_chassisAngularOffset ));
   }
   
+  // Advantage Scope comparation between Module PID and Module State
+
   public SwerveModuleState getSetpoints() {
     return sm_setpoints;
   }
 
+  // Change the current state of the module with @desiredState
 
   public void setdesiredState(SwerveModuleState desiredState) {
     
@@ -125,15 +120,12 @@ public class BalamSwerveModule {
     correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(m_chassisAngularOffset));
 
     SwerveModuleState optimizedDesiredState = SwerveModuleState.optimize(correctedDesiredState, new Rotation2d(sm_turningEncoder.getPosition()));
-    
-    // Stop if no input
 
     if (Math.abs(desiredState.speedMetersPerSecond) < 0.05) {
       stop();
       return;
     }
 
-    // Set points
     sm_drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
     sm_turningPIDController.setReference(optimizedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
 
