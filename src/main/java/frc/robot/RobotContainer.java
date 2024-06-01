@@ -23,14 +23,24 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.OIConstants;
-import frc.robot.subsystems.NavX;
+import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.ShooterCommand;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.Shuffleboard.LimelightSubsystem;
+import frc.robot.subsystems.Shuffleboard.NavXSubsystem;
 import frc.robot.subsystems.Swerve.DriveSubsystem;
 
 public class RobotContainer {
 
   private XboxController m_controller = new XboxController(0);
+
   private DriveSubsystem m_robotDrive = new DriveSubsystem();
-  private NavX navx_Data = new NavX();
+  private IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
+  private ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
+
+  private NavXSubsystem navx_Data = new NavXSubsystem();
+  private LimelightSubsystem m_limelight = new LimelightSubsystem();
 
   private final SendableChooser<Command> autoChooser;
   private final SendableChooser<String> pathfinderChooser;
@@ -41,11 +51,15 @@ public class RobotContainer {
 
     NamedCommands.registerCommand("PRINT", new PrintCommand("Auto ended"));
 
+    NamedCommands.registerCommand("ActivateIntake", new PrintCommand("Grabing Note")); // Intake
+    NamedCommands.registerCommand("ActivateShooter", new PrintCommand("Shooting Note")); // Shooter 
+
     m_robotDrive.setDefaultCommand(new RunCommand(
       () -> m_robotDrive.drive(
         -MathUtil.applyDeadband(m_controller.getLeftY(), OIConstants.kDriveDeadband),
         -MathUtil.applyDeadband(m_controller.getLeftX(), OIConstants.kDriveDeadband),
-        -MathUtil.applyDeadband(m_controller.getRightX(), OIConstants.kDriveDeadband), !true),
+        -MathUtil.applyDeadband(m_controller.getRightX(), OIConstants.kDriveDeadband), 
+        !true), // Useless
       m_robotDrive));
 
     autoChooser = AutoBuilder.buildAutoChooser();
@@ -70,6 +84,12 @@ public class RobotContainer {
         () -> m_robotDrive.changeDriveMod(), 
         m_robotDrive));
 
+    new JoystickButton(m_controller, XboxController.Button.kA.value)
+      .whileTrue(new IntakeCommand(m_intakeSubsystem, m_shooterSubsystem));
+
+    new JoystickButton(m_controller, XboxController.Button.kY.value)
+    .whileFalse(new ShooterCommand(m_shooterSubsystem));
+
   }
 
   public Command getAutonomousCommand() {
@@ -90,6 +110,7 @@ public class RobotContainer {
  
     SequentialCommandGroup finalCommand = new SequentialCommandGroup(pathfindingCommand.andThen(autoChooser.getSelected()).withTimeout(15));
 
+    m_limelight.toggleLED(true);
     return finalCommand;
     
   }

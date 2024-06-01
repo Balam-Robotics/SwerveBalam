@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package frc.robot.subsystems.Shuffleboard;
 
 import com.kauailabs.navx.frc.AHRS;
 
@@ -11,12 +11,12 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ShuffleboardConstants;
 
-public class NavX extends SubsystemBase {
+public class NavXSubsystem extends SubsystemBase {
   /** Creates a new NavX. */
 
   private AHRS m_gyro;
 
-  public NavX() {
+  public NavXSubsystem() {
     m_gyro = new AHRS(SPI.Port.kMXP);
   }
 

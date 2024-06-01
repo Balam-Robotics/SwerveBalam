@@ -96,19 +96,16 @@ public final class Constants {
     }
 
     public static final class IntakeConstants {
-        public static final int frontSpeed = 1;
-        public static final int backSpeed = -1;
+        public static final int kUpperIntakeCanId = 5;
+        public static final int kLowerIntakeCanId = 7;
     }
 
     public static final class ShooterConstants {
-        public static final int frontCanId = 0;
-        public static final int backCanId = 0;
-
-        public static final int frontRightSpeed = 1;
-        public static final int backRightSpeed = 1;
-
-        public static final int frontLeftSpeed = -1;
-        public static final int backleftSpeed = -1;
+        public static final int kUpperRightCanId = 13;
+        public static final int kUpperLeftCanId = 14;
+        
+        public static final int kLowerRightCanId = 15;
+        public static final int kLowerLeftCanId = 16;
     }
 
     public static final class OIConstants {
