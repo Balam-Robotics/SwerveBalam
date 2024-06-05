@@ -3,39 +3,39 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.894982565999367,
-        "y": 5.539225686154654
+        "x": 1.550246271425656,
+        "y": 5.518308906147127
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.894982565999367,
-        "y": 4.539225686154654
+        "x": 2.5502462714256557,
+        "y": 5.518308906147127
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "AutoEnd2"
     },
     {
       "anchor": {
-        "x": 2.894982565999367,
-        "y": 4.251033666118688
+        "x": 2.902443459717638,
+        "y": 5.518308906147127
       },
       "prevControl": {
-        "x": 2.894982565999367,
-        "y": 5.251033666118688
+        "x": 1.902443459717638,
+        "y": 5.518308906147127
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "AutoEnd3"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 0.5,
-    "maxAcceleration": 1.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 1.5,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 410.0
+    "maxAngularAcceleration": 720.0
   },
   "goalEndState": {
     "velocity": 0,
@@ -43,7 +43,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Autonoma Blue 1",
   "previewStartingState": {
     "rotation": 0,
     "velocity": 0

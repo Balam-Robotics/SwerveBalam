@@ -12,7 +12,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
-/** Add your docs here. */
 public final class Constants {
 
     public static final class DriveConstants {
@@ -34,7 +33,17 @@ public final class Constants {
         public static final double kBackLeftChassisAngularOffset = Math.PI;
         public static final double kBackRightChassisAngularOffset = Math.PI / 2;
 
-        // Set Sparks Ids
+        // SPARX MAX CAN ID
+
+        public static final int frontLeftDriveId = 22;
+        public static final int frontLeftTurningId = 21;
+        public static final int frontRightDriveId = 12;
+        public static final int frontRightTurningId = 11;
+
+        public static final int backLeftDriveId = 32;
+        public static final int backLeftTurningId = 31;
+        public static final int backRightDriveId = 2;
+        public static final int backRightTurningId = 1;
 
     }
 
@@ -81,18 +90,6 @@ public final class Constants {
         public static final int kDrivingMotorCurrentLimit = 50; // amps
         public static final int kTurningMotorCurrentLimit = 20; // amps
 
-        public static final int frontLeftDriveId = 22;
-        public static final int frontLeftTurningId = 21;
-
-        public static final int frontRightDriveId = 12;
-        public static final int frontRightTurningId = 11;
-
-        public static final int backLeftDriveId = 32;
-        public static final int backLeftTurningId = 31;
-
-        public static final int backRightDriveId = 2;
-        public static final int backRightTurningId = 1;
-
     }
 
     public static final class IntakeConstants {
@@ -114,14 +111,26 @@ public final class Constants {
     }
 
     public static final class AutoConstants {
-        public static final double kMaxSpeedMetersPerSecond = 3;
-        public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
+        public static final double kMaxSpeedMetersPerSecond = 0.5;
+        public static final double kMaxAccelerationMetersPerSecond = 1.0;
+        public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI; // Units.degreesToRadians(540) // 720
+        public static final double kMaxAngularAccelerationRadiansPerSecond = Math.PI;
+
+        public static final double autoTranslationP = 2.5;
+        public static final double autoTranslationI = 0;
+        public static final double autoTranslationD = 0;
+
+        public static final double autoRotationP = 1.5;
+        public static final double autoRotationI = 0;
+        public static final double autoRotationD = 0;
+        
+        public static final double kMaxModuleSpeed = 4.8; // Max speed for each modul
+        public static final double kDriveBaseRadius = 0.46; // Distance from robot center to one module
     }
 
     public static final class ShuffleboardConstants {
         public static final ShuffleboardTab SwerveTab = Shuffleboard.getTab("Swerve");
-        public static final ShuffleboardTab ShooterTab = Shuffleboard.getTab("Shooter");
-        public static final ShuffleboardTab VisionTab = Shuffleboard.getTab("VisionTab");
+        public static final ShuffleboardTab VisionTab = Shuffleboard.getTab("Vision");
     }
 
 }

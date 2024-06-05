@@ -1,0 +1,52 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.4546363692231927,
+        "y": 5.518308906147127
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.4546363692231927,
+        "y": 5.518308906147127
+      },
+      "isLocked": false,
+      "linkedName": "Salida4"
+    },
+    {
+      "anchor": {
+        "x": 2.8266068394532997,
+        "y": 5.998726683099867
+      },
+      "prevControl": {
+        "x": 1.8266068394532997,
+        "y": 5.998726683099867
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.5,
+    "maxAcceleration": 1.5,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "Autonoma Blue 1",
+  "previewStartingState": {
+    "rotation": 0,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

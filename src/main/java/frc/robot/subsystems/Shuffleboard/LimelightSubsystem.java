@@ -5,43 +5,41 @@
 package frc.robot.subsystems.Shuffleboard;
 
 import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ShuffleboardConstants;
+import frc.robot.subsystems.LimelightHelpers;
 
 public class LimelightSubsystem extends SubsystemBase {
 
-  NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight-balam");
+  private final String limelight = "limelight-balam";
   
   private GenericEntry tx = ShuffleboardConstants.VisionTab.add("Tx", 0).getEntry();
-  private GenericEntry ty = ShuffleboardConstants.VisionTab.add("Tx", 0).getEntry();
-  private GenericEntry ta = ShuffleboardConstants.VisionTab.add("Tx", 0).getEntry();
-  private GenericEntry tv = ShuffleboardConstants.VisionTab.add("Tx", 0).getEntry();
+  private GenericEntry ty = ShuffleboardConstants.VisionTab.add("Ty", 0).getEntry();
+  private GenericEntry ta = ShuffleboardConstants.VisionTab.add("Ta", 0).getEntry();
+  private GenericEntry tv = ShuffleboardConstants.VisionTab.add("Tv", false).getEntry();
 
-  public LimelightSubsystem() {
-  }
+  public LimelightSubsystem() {}
 
   public void init() {
     System.out.println("Limelight Subsystem Init");
-    limelight.getEntry("ledMode").setNumber(1);
+    LimelightHelpers.setLEDMode_ForceOff(limelight);
   }
 
   public void toggleLED(boolean val) {
-    limelight.getEntry("ledMode").setNumber(val ? 3 : 1);
+    if (val) {
+      LimelightHelpers.setLEDMode_ForceOn(limelight);
+    } else {
+      LimelightHelpers.setLEDMode_ForceOff(limelight);
+    }
   }
 
   @Override
   public void periodic() {
 
-    if (limelight.getEntry("tv").getDouble(0) == 1) {
-
-      tx.setDouble(limelight.getEntry("tx").getDouble(0));
-      ty.setDouble(limelight.getEntry("ty").getDouble(0));
-      ta.setDouble(limelight.getEntry("ta").getDouble(0));
-      tv.setDouble(limelight.getEntry("tv").getDouble(0));
-
-    }
+    tx.setDouble(LimelightHelpers.getTX(limelight));
+    ty.setDouble(LimelightHelpers.getTY(limelight));
+    ta.setDouble(LimelightHelpers.getTA(limelight));
+    tv.setBoolean(LimelightHelpers.getTV(limelight));
 
   }
 }

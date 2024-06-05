@@ -7,13 +7,13 @@ package frc.robot;
 import java.util.List;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.CommandUtil;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -22,32 +22,30 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.OIConstants;
-import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.ShooterCommand;
-import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.Shuffleboard.LimelightSubsystem;
-import frc.robot.subsystems.Shuffleboard.NavXSubsystem;
+
 import frc.robot.subsystems.Swerve.DriveSubsystem;
 
 public class RobotContainer {
 
-  private XboxController m_controller = new XboxController(0);
+  private XboxController m_controller = new XboxController(OIConstants.kDriveControllerPort);
 
   private DriveSubsystem m_robotDrive = new DriveSubsystem();
-  private IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
-  private ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
 
-  private NavXSubsystem navx_Data = new NavXSubsystem();
-  private LimelightSubsystem m_limelight = new LimelightSubsystem();
+  public LimelightSubsystem m_limelight = new LimelightSubsystem();
 
   private final SendableChooser<Command> autoChooser;
-  private final SendableChooser<String> pathfinderChooser;
 
   public RobotContainer() {
     configureBindings();
-    navx_Data.init();
+    m_robotDrive.zeroHeading();
+    m_limelight.init();
+
+    autoChooser = AutoBuilder.buildAutoChooser();
+
+    SmartDashboard.putData("Auto Chooser", autoChooser);
 
     NamedCommands.registerCommand("PRINT", new PrintCommand("Auto ended"));
 
@@ -59,16 +57,8 @@ public class RobotContainer {
         -MathUtil.applyDeadband(m_controller.getLeftY(), OIConstants.kDriveDeadband),
         -MathUtil.applyDeadband(m_controller.getLeftX(), OIConstants.kDriveDeadband),
         -MathUtil.applyDeadband(m_controller.getRightX(), OIConstants.kDriveDeadband), 
-        !true), // Useless
+        false), 
       m_robotDrive));
-
-    autoChooser = AutoBuilder.buildAutoChooser();
-    pathfinderChooser = new SendableChooser<>();
-
-    SmartDashboard.putData("Auto Chooser", autoChooser);
-    SmartDashboard.putData("Pathfinder Chooser", pathfinderChooser);
-    pathfinderChooser.addOption("Testing Auto", "Testing Auto");
-    pathfinderChooser.addOption("WIP", "Wip");
 
   }
 
@@ -78,39 +68,39 @@ public class RobotContainer {
         .whileTrue(new RunCommand(
             () -> m_robotDrive.zeroHeading(), 
             m_robotDrive));
-
-    new JoystickButton(m_controller, XboxController.Button.kB.value)
-      .whileTrue(new RunCommand(
-        () -> m_robotDrive.changeDriveMod(), 
-        m_robotDrive));
-
+        
     new JoystickButton(m_controller, XboxController.Button.kA.value)
-      .whileTrue(new IntakeCommand(m_intakeSubsystem, m_shooterSubsystem));
+        .whileTrue(new RunCommand(
+          () -> m_robotDrive.zeroPose(), 
+          m_robotDrive));
+          
+    new JoystickButton(m_controller, XboxController.Button.kB.value).onTrue(m_robotDrive.changeDriveModeCmd());
 
-    new JoystickButton(m_controller, XboxController.Button.kY.value)
-    .whileFalse(new ShooterCommand(m_shooterSubsystem));
+  } 
 
-  }
-
-  public Command getAutonomousCommand() {
-
+  public SequentialCommandGroup getAutonomousCommand() {
+    
     List<PathPlannerPath> auto = PathPlannerAuto.getPathGroupFromAutoFile(autoChooser.getSelected().getName());
     PathPlannerPath[] path = auto.toArray(new PathPlannerPath[0]);
     
     PathConstraints constraints = new PathConstraints(
-        0.5, 1.0, 
-        Units.degreesToRadians(540), Units.degreesToRadians(720)
+        AutoConstants.kMaxSpeedMetersPerSecond, AutoConstants.kMaxAccelerationMetersPerSecond, 
+        AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularAccelerationRadiansPerSecond
     );
 
-    Command pathfindingCommand = AutoBuilder.pathfindToPose(
+    Command pathfinderConstructor = AutoBuilder.pathfindToPose(
         path[0].getPreviewStartingHolonomicPose(),  
         constraints,
         3.0
-    );
- 
-    SequentialCommandGroup finalCommand = new SequentialCommandGroup(pathfindingCommand.andThen(autoChooser.getSelected()).withTimeout(15));
+    );  
+
+    Command pathfindingCommand = CommandUtil.wrappedEventCommand(pathfinderConstructor);
+    Command autoCommand = CommandUtil.wrappedEventCommand(autoChooser.getSelected());
+
+    SequentialCommandGroup finalCommand = new SequentialCommandGroup(pathfindingCommand.andThen(autoCommand));
 
     m_limelight.toggleLED(true);
+    
     return finalCommand;
     
   }

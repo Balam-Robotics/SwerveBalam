@@ -2,7 +2,7 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.8985394865917724,
+      "x": 1.208782334988287,
       "y": 5.525138184875874
     },
     "rotation": 0
@@ -14,25 +14,43 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Path1"
+            "pathName": "Salida"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Path2"
+            "pathName": "Salida2"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Path3"
+            "pathName": "Salida3"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Path4"
+            "pathName": "Salida4"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Salida5"
           }
         }
       ]
