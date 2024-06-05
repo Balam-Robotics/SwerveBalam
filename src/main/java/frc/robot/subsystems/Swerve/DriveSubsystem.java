@@ -2,6 +2,25 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+/*
+ 
+
+
+
+
+  .______        ___       __          ___      .___  ___. 
+  |   _  \      /   \     |  |        /   \     |   \/   | 
+  |  |_)  |    /  ^  \    |  |       /  ^  \    |  \  /  | 
+  |   _  <    /  /_\  \   |  |      /  /_\  \   |  |\/|  | 
+  |  |_)  |  /  _____  \  |  `----./  _____  \  |  |  |  | 
+  |______/  /__/     \__\ |_______/__/     \__\ |__|  |__| 
+  
+
+
+
+
+*/      
+
 package frc.robot.subsystems.Swerve;
 
 import com.kauailabs.navx.frc.AHRS;
@@ -22,6 +41,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.LimelightConstants;
 import frc.robot.Constants.ShuffleboardConstants;
 import frc.robot.subsystems.LimelightHelpers;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -172,7 +192,7 @@ public class DriveSubsystem extends SubsystemBase {
     // m_odometry.resetPosition(getHeading(), getSwerveModulePositions(), new
     // Pose2d(1.21, 5.53, getHeading()));
     m_odometry.resetPosition(getHeading(), getSwerveModulePositions(),
-        LimelightHelpers.getBotPose2d_wpiBlue("limelight-balam"));
+        LimelightHelpers.getBotPose2d_wpiBlue(LimelightConstants.kLimelightName));
   }
 
   // Relative Robot DriveSubsystem for Pathplanner
@@ -210,6 +230,15 @@ public class DriveSubsystem extends SubsystemBase {
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
     setDesiredStates(swerveModuleStates);
 
+  }
+
+  // Misc
+
+  public void setX() {
+    m_frontLeft.setdesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+    m_backLeft.setdesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
+    m_backLeft.setdesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
+    m_backRight.setdesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
   }
 
   // Swerve Common Functions
@@ -314,7 +343,7 @@ public class DriveSubsystem extends SubsystemBase {
     publish_SwerverSetpoints.set(setPoints);
     publish_robotRotation.set(getRotation2d());
     publish_robotPose.set(getPose());
-    publish_limelightRobotPose2d.set(LimelightHelpers.getBotPose2d_wpiBlue("limelight-balam"));
+    publish_limelightRobotPose2d.set(LimelightHelpers.getBotPose2d_wpiBlue(LimelightConstants.kLimelightName));
     publish_poseEstimator.set(poseEstimator.getEstimatedPosition());
     updateShuffleboard();
 

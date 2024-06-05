@@ -3,7 +3,8 @@
   "robotLength": 0.6,
   "holonomicMode": true,
   "pathFolders": [
-    "Autonoma Blue 1"
+    "Autonoma Blue 1",
+    "Autonoma Red 1"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.5,

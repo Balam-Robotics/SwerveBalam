@@ -92,29 +92,17 @@ public final class Constants {
 
     }
 
-    public static final class IntakeConstants {
-        public static final int kUpperIntakeCanId = 5;
-        public static final int kLowerIntakeCanId = 7;
-    }
-
-    public static final class ShooterConstants {
-        public static final int kUpperRightCanId = 13;
-        public static final int kUpperLeftCanId = 14;
-        
-        public static final int kLowerRightCanId = 15;
-        public static final int kLowerLeftCanId = 16;
-    }
-
     public static final class OIConstants {
         public static final int kDriveControllerPort = 0;
         public static final double kDriveDeadband = 0.2;
     }
 
     public static final class AutoConstants {
+
         public static final double kMaxSpeedMetersPerSecond = 0.5;
         public static final double kMaxAccelerationMetersPerSecond = 1.0;
-        public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI; // Units.degreesToRadians(540) // 720
-        public static final double kMaxAngularAccelerationRadiansPerSecond = Math.PI;
+        public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI; // Units.degreesToRadians(540)
+        public static final double kMaxAngularAccelerationRadiansPerSecond = Math.PI; // Units.degreesToRadians(720)
 
         public static final double autoTranslationP = 2.5;
         public static final double autoTranslationI = 0;
@@ -124,8 +112,14 @@ public final class Constants {
         public static final double autoRotationI = 0;
         public static final double autoRotationD = 0;
         
-        public static final double kMaxModuleSpeed = 4.8; // Max speed for each modul
+        public static final double kMaxModuleSpeed = 4.8; // Max speed for each module
         public static final double kDriveBaseRadius = 0.46; // Distance from robot center to one module
+
+    }
+
+    public static final class LimelightConstants {
+        public static final String kLimelightName = "limelight-balam";
+        public static final int[] kValidAprilTagIds = {4};
     }
 
     public static final class ShuffleboardConstants {

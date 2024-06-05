@@ -6,6 +6,7 @@ package frc.robot.subsystems.Shuffleboard;
 
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.LimelightConstants;
 import frc.robot.Constants.ShuffleboardConstants;
 import frc.robot.subsystems.LimelightHelpers;
 
@@ -18,7 +19,11 @@ public class LimelightSubsystem extends SubsystemBase {
   private GenericEntry ta = ShuffleboardConstants.VisionTab.add("Ta", 0).getEntry();
   private GenericEntry tv = ShuffleboardConstants.VisionTab.add("Tv", false).getEntry();
 
-  public LimelightSubsystem() {}
+  public LimelightSubsystem() {
+
+    LimelightHelpers.SetFiducialIDFiltersOverride(limelight, LimelightConstants.kValidAprilTagIds);
+
+  }
 
   public void init() {
     System.out.println("Limelight Subsystem Init");

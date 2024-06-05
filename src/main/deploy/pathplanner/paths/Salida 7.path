@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.4546363692231927,
-        "y": 5.518308906147127
+        "x": 1.2977105906762236,
+        "y": 5.52155524239874
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.4546363692231927,
-        "y": 5.518308906147127
+        "x": 2.297710590676224,
+        "y": 5.52155524239874
       },
       "isLocked": false,
-      "linkedName": "Salida4"
+      "linkedName": "End6"
     },
     {
       "anchor": {
-        "x": 2.9337269587943684,
-        "y": 6.923854986500009
+        "x": 3.245349124150206,
+        "y": 6.359039811792554
       },
       "prevControl": {
-        "x": 2.105980582067926,
-        "y": 6.407730775129404
+        "x": 2.245349124150206,
+        "y": 6.359039811792554
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "End5"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -39,7 +39,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 53.901716032891905,
+    "rotation": 0,
     "rotateFast": false
   },
   "reversed": false,

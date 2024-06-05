@@ -2,6 +2,25 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+/*
+ 
+
+
+
+
+  .______        ___       __          ___      .___  ___. 
+  |   _  \      /   \     |  |        /   \     |   \/   | 
+  |  |_)  |    /  ^  \    |  |       /  ^  \    |  \  /  | 
+  |   _  <    /  /_\  \   |  |      /  /_\  \   |  |\/|  | 
+  |  |_)  |  /  _____  \  |  `----./  _____  \  |  |  |  | 
+  |______/  /__/     \__\ |_______/__/     \__\ |__|  |__| 
+  
+
+
+
+
+*/     
+
 package frc.robot;
 
 import java.util.List;
@@ -14,6 +33,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -23,23 +43,34 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.LimelightConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.commands.AutoLimelightCommand;
 import frc.robot.subsystems.Shuffleboard.LimelightSubsystem;
-
 import frc.robot.subsystems.Swerve.DriveSubsystem;
 
 public class RobotContainer {
 
+  // Drive Controller
+
   private XboxController m_controller = new XboxController(OIConstants.kDriveControllerPort);
 
-  private DriveSubsystem m_robotDrive = new DriveSubsystem();
+  private JoystickButton xButton = new JoystickButton(m_controller, XboxController.Button.kX.value);
+  private JoystickButton yButton = new JoystickButton(m_controller, XboxController.Button.kY.value);
+  private JoystickButton bButton = new JoystickButton(m_controller, XboxController.Button.kB.value);
+  private JoystickButton aButton = new JoystickButton(m_controller, XboxController.Button.kA.value);
 
+  // Subsystems
+
+  private DriveSubsystem m_robotDrive = new DriveSubsystem();
   public LimelightSubsystem m_limelight = new LimelightSubsystem();
 
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
-    configureBindings();
+    configureBindings();    
+    registedCommands();
+
     m_robotDrive.zeroHeading();
     m_limelight.init();
 
@@ -47,14 +78,9 @@ public class RobotContainer {
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
-    NamedCommands.registerCommand("PRINT", new PrintCommand("Auto ended"));
-
-    NamedCommands.registerCommand("ActivateIntake", new PrintCommand("Grabing Note")); // Intake
-    NamedCommands.registerCommand("ActivateShooter", new PrintCommand("Shooting Note")); // Shooter 
-
     m_robotDrive.setDefaultCommand(new RunCommand(
       () -> m_robotDrive.drive(
-        -MathUtil.applyDeadband(m_controller.getLeftY(), OIConstants.kDriveDeadband),
+        -MathUtil.applyDeadband(m_controller.getLeftY(), OIConstants.kDriveDeadband), 
         -MathUtil.applyDeadband(m_controller.getLeftX(), OIConstants.kDriveDeadband),
         -MathUtil.applyDeadband(m_controller.getRightX(), OIConstants.kDriveDeadband), 
         false), 
@@ -64,19 +90,20 @@ public class RobotContainer {
 
   private void configureBindings() {
 
-    new JoystickButton(m_controller, XboxController.Button.kX.value)
-        .whileTrue(new RunCommand(
-            () -> m_robotDrive.zeroHeading(), 
-            m_robotDrive));
+    xButton.whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
         
-    new JoystickButton(m_controller, XboxController.Button.kA.value)
-        .whileTrue(new RunCommand(
-          () -> m_robotDrive.zeroPose(), 
-          m_robotDrive));
+    yButton.whileTrue(new AutoLimelightCommand(m_robotDrive, LimelightConstants.kLimelightName));
+
+    aButton.whileTrue(new RunCommand(() -> m_robotDrive.zeroPose(), m_robotDrive));
           
-    new JoystickButton(m_controller, XboxController.Button.kB.value).onTrue(m_robotDrive.changeDriveModeCmd());
+    bButton.onTrue(m_robotDrive.changeDriveModeCmd());
 
   } 
+
+  private void registedCommands() {
+    NamedCommands.registerCommand("PRINT", new PrintCommand("Auto ended"));
+    NamedCommands.registerCommand("LimelightAmp", new AutoLimelightCommand(m_robotDrive, LimelightConstants.kLimelightName).withTimeout(1.50));
+  }
 
   public SequentialCommandGroup getAutonomousCommand() {
     
@@ -97,9 +124,21 @@ public class RobotContainer {
     Command pathfindingCommand = CommandUtil.wrappedEventCommand(pathfinderConstructor);
     Command autoCommand = CommandUtil.wrappedEventCommand(autoChooser.getSelected());
 
-    SequentialCommandGroup finalCommand = new SequentialCommandGroup(pathfindingCommand.andThen(autoCommand));
+    var alliance = DriverStation.getAlliance();
+    boolean flipPath = false;
+    if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
+      flipPath = true;
+    } else if (alliance.get() == DriverStation.Alliance.Blue) {
+      flipPath = false;
+    }
 
-    m_limelight.toggleLED(true);
+    SequentialCommandGroup finalCommand;
+
+    if (flipPath) {
+      finalCommand = new SequentialCommandGroup(autoCommand);
+    } else {
+      finalCommand = new SequentialCommandGroup(pathfindingCommand.andThen(autoCommand));
+    }
     
     return finalCommand;
     

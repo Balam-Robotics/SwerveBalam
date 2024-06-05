@@ -14,13 +14,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Salida"
+            "pathName": "Salida1"
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "Salida2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LimelightAmp"
           }
         },
         {
@@ -42,6 +48,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "LimelightAmp"
+          }
+        },
+        {
           "type": "wait",
           "data": {
             "waitTime": 1.5
@@ -51,6 +63,30 @@
           "type": "path",
           "data": {
             "pathName": "Salida5"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Salida6"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LimelightAmp"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Salida 7"
           }
         }
       ]
