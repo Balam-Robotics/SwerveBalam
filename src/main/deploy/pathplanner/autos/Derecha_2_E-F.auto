@@ -1,0 +1,100 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Derecha to F"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "l2Command"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ejectCoral"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "F to Source"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "sourceCommand"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Source to E"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "l2Command"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ejectCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "E to Teleop"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetGyro"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
