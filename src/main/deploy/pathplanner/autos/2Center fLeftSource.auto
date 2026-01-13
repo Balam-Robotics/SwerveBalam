@@ -1,0 +1,133 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Center to F"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AlignRightCoral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ForwardCommand"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetCommand"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "BackwardCommand"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "F to source"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Source to D"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AlignRightCoral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ForwardCommand"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetCommand"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "BackwardCommand"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D to source"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

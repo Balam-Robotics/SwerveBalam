@@ -1,0 +1,67 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right to J"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AlignLeftCoral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ForwardCommand"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetCommand"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "BackwardCommand"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "New Path"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "New New Path"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

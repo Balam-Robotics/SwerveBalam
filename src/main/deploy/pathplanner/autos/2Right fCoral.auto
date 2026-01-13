@@ -1,0 +1,115 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right to J"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AlignRightCoral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ForwardCommand"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetCommand"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "BackwardCommand"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "J to source"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Source to C"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "l2Command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AlignLeftCoral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ForwardCommand"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetCommand"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
