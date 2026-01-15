@@ -1,0 +1,4 @@
+si estas viendo esto significa que toca reacher todo el codigo del robot para 2026 porque los cambios de librerias estan medio feos y va a ser mas tardado intentar reparar el codigo anterior a hacer uno nuevo
+aun asi se usaran los antiguos codigos para referencia pero el codigo final sera hecho desde 0
+
+tiempo consudmio: 0 horas por el momento
